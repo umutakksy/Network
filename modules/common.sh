@@ -12,11 +12,14 @@ warn() { printf '[!] %s\n' "$*" >&2; }
 die()  { warn "$*"; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Gerekli komut bulunamadı: $1. Önce ./install.sh çalıştırın."; }
 
+trim_whitespace() {
+    printf '%s' "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+}
+
 valid_domain() {
-    local d="$1"
+    local d
+    d="$(trim_whitespace "$1")"
     d="${d,,}"
-    d="${d#" ${d%%[![:space:]]*}"}"
-    d="${d%"${d##*[![:space:]]}"}"
     d="${d%.}"
 
     [[ -n "$d" && ${#d} -le 253 ]] || return 1
@@ -26,8 +29,7 @@ valid_domain() {
 get_target() {
     local target="${DOMAINHUNTER_TARGET:-}"
     if [[ -z "$target" ]]; then read -r -p "Hedef domain (ör. example.com): " target; fi
-    target="${target#" ${target%%[![:space:]]*}"}"
-    target="${target%"${target##*[![:space:]]}"}"
+    target="$(trim_whitespace "$target")"
     target="${target,,}"
     target="${target#http://}"
     target="${target#https://}"
