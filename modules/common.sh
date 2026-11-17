@@ -13,23 +13,13 @@ die()  { warn "$*"; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Gerekli komut bulunamadı: $1. Önce ./install.sh çalıştırın."; }
 
 valid_domain() {
-    local d="${1,,}" label
+    local d="${1,,}"
     d="${d%.}"
+
+    # DNS name: 1-63 chars per label, labels separated by dots,
+    # alphabetic final label (supports domains such as fatih.bel.tr).
     [[ -n "$d" && ${#d} -le 253 ]] || return 1
-    [[ "$d" =~ ^[a-z0-9.-]+$ ]] || return 1
-    [[ "$d" != .* && "$d" != *. && "$d" != *..* ]] || return 1
-
-    local -a labels
-    IFS='.' read -r -a labels <<< "$d"
-    (("${#labels[@]}" >= 2)) || return 1
-
-    for label in "${labels[@]}"; do
-        (("${#label}" >= 1 && ${#label} <= 63)) || return 1
-        [[ "$label" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || return 1
-    done
-
-    # Require an alphabetic public suffix; supports multi-label suffixes such as .bel.tr.
-    [[ "${labels[-1]}" =~ ^[a-z]{2,63}$ ]]
+    [[ "$d" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$ ]]
 }
 
 get_target() {
