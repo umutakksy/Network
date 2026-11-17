@@ -26,7 +26,8 @@ install_go_tool github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest su
 install_go_tool github.com/projectdiscovery/dnsx/cmd/dnsx@latest dnsx
 install_go_tool github.com/projectdiscovery/httpx/cmd/httpx@latest httpx
 install_go_tool github.com/tomnomnom/assetfinder@latest assetfinder
-install_go_tool github.com/owasp-amass/amass/v4/...@master amass
+echo "[+] OWASP Amass v5 kuruluyor..."
+CGO_ENABLED=0 GOBIN="$HOME/go/bin" go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
 
 if ! grep -Fq 'HOME/go/bin' "$HOME/.bashrc" 2>/dev/null; then
   printf '\nexport PATH="$HOME/go/bin:$PATH"\n' >> "$HOME/.bashrc"
