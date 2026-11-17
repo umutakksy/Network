@@ -19,9 +19,7 @@ valid_domain() {
 
 get_target() {
     local target="${DOMAINHUNTER_TARGET:-}"
-    if [[ -z "$target" ]]; then
-        read -r -p "Hedef domain (ör. example.com): " target
-    fi
+    if [[ -z "$target" ]]; then read -r -p "Hedef domain (ör. example.com): " target; fi
     target="${target,,}"
     target="${target#http://}"
     target="${target#https://}"
@@ -33,11 +31,11 @@ get_target() {
 
 confirm_authorized() {
     local target="$1"
-    if [[ "${DOMAINHUNTER_AUTHORIZED:-}" == "yes" ]]; then return 0; fi
+    [[ "${DOMAINHUNTER_AUTHORIZED:-}" == "yes" ]] && return 0
     echo
-    warn "Aktif sorgular hedefe DNS/HTTP/port trafiği gönderir."
+    warn "Bu işlem hedef veya üçüncü taraf servislerle sorgu trafiği oluşturabilir."
     read -r -p "$target alan adını test etme yetkiniz olduğunu onaylıyor musunuz? [y/N] " answer
-    [[ "$answer" == "y" || "$answer" == "Y" ]] || die "Kullanıcı yetkilendirme onayı vermedi."
+    [[ "$answer" == "y" || "$answer" == "Y" ]] || die "Yetkilendirme onayı verilmedi."
 }
 
 new_run_dir() {
@@ -51,7 +49,16 @@ new_run_dir() {
 ask_or_use_target() {
     TARGET="$(get_target)"
     confirm_authorized "$TARGET"
-    if [[ -z "${RUN_DIR:-}" ]]; then new_run_dir "$TARGET"; fi
+    if [[ -z "${RUN_DIR:-}" ]]; then
+        local latest=""
+        [[ -f "$RESULT_DIR/latest.txt" ]] && latest="$(<"$RESULT_DIR/latest.txt")"
+        if [[ -n "$latest" && -d "$latest" && "$(basename "$latest")" == "$TARGET"_* ]]; then
+            RUN_DIR="$latest"
+            log "Mevcut tarama klasörü kullanılıyor: $RUN_DIR"
+        else
+            new_run_dir "$TARGET"
+        fi
+    fi
     export TARGET RUN_DIR
 }
 
