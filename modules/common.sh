@@ -13,11 +13,12 @@ die()  { warn "$*"; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Gerekli komut bulunamadı: $1. Önce ./install.sh çalıştırın."; }
 
 valid_domain() {
-    local d="${1,,}"
+    local d="$1"
+    d="${d,,}"
+    d="${d#" ${d%%[![:space:]]*}"}"
+    d="${d%"${d##*[![:space:]]}"}"
     d="${d%.}"
 
-    # DNS name: 1-63 chars per label, labels separated by dots,
-    # alphabetic final label (supports domains such as fatih.bel.tr).
     [[ -n "$d" && ${#d} -le 253 ]] || return 1
     [[ "$d" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$ ]]
 }
@@ -25,6 +26,8 @@ valid_domain() {
 get_target() {
     local target="${DOMAINHUNTER_TARGET:-}"
     if [[ -z "$target" ]]; then read -r -p "Hedef domain (ör. example.com): " target; fi
+    target="${target#" ${target%%[![:space:]]*}"}"
+    target="${target%"${target##*[![:space:]]}"}"
     target="${target,,}"
     target="${target#http://}"
     target="${target#https://}"
