@@ -14,8 +14,8 @@ mkdir -p "$HOME/go/bin"
 
 install_go_tool() {
   local package="$1" binary="$2"
-  if command -v "$binary" >/dev/null 2>&1; then
-    echo "[=] $binary mevcut: $(command -v "$binary")"
+  if [[ -x "$HOME/go/bin/$binary" ]]; then
+    echo "[=] $binary zaten kurulu: $HOME/go/bin/$binary"
     return 0
   fi
   echo "[+] $binary kuruluyor..."
@@ -26,11 +26,23 @@ install_go_tool github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest su
 install_go_tool github.com/projectdiscovery/dnsx/cmd/dnsx@latest dnsx
 install_go_tool github.com/projectdiscovery/httpx/cmd/httpx@latest httpx
 install_go_tool github.com/tomnomnom/assetfinder@latest assetfinder
-echo "[+] OWASP Amass v5 kuruluyor..."
-CGO_ENABLED=0 GOBIN="$HOME/go/bin" go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
 
+if [[ ! -x "$HOME/go/bin/amass" ]]; then
+  echo "[+] OWASP Amass v5 kuruluyor..."
+  CGO_ENABLED=0 GOBIN="$HOME/go/bin" go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+else
+  echo "[=] Amass zaten kurulu: $HOME/go/bin/amass"
+fi
+
+# Bash uyumluluğu
 if ! grep -Fq 'HOME/go/bin' "$HOME/.bashrc" 2>/dev/null; then
   printf '\nexport PATH="$HOME/go/bin:$PATH"\n' >> "$HOME/.bashrc"
+fi
+
+# Fish uyumluluğu
+if command -v fish >/dev/null 2>&1; then
+  mkdir -p "$HOME/.config/fish/conf.d"
+  printf 'fish_add_path "$HOME/go/bin"\n' > "$HOME/.config/fish/conf.d/domainhunter.fish"
 fi
 
 export PATH="$HOME/go/bin:$PATH"
@@ -43,4 +55,6 @@ for tool in git curl jq dig go nmap amass subfinder dnsx httpx assetfinder; do
     printf '  [--] %s bulunamadı / PATH dışında\n' "$tool"
   fi
 done
-echo "PATH için: export PATH=\"$HOME/go/bin:$PATH\""
+echo
+echo "Bash: yeni terminal açın veya 'source ~/.bashrc' çalıştırın."
+echo "Fish: yeni terminal açın veya 'fish_add_path $HOME/go/bin' çalıştırın."
